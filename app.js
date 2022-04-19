@@ -42,3 +42,14 @@ app.use((err, req, res, next) => {
 
 app.listen(3000);
 
+const next = require('next');
+const dev = process.env.NODE_ENV !== 'production';
+const nextApp = next({ dev });
+
+nextApp.prepare().then(
+  () => app.get('*', nextApp.getRequestHandler()),
+  err => {
+      console.error(err.stack);
+    process.exit(1);
+  }
+);
