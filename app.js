@@ -35,6 +35,37 @@ app.post('/api/todos', (req, res, next) => {
     res.status(201).json(todo);
 });
 
+// 特定のパスに対するリクエストに対して共通の処理を行うミドルウェア
+app.use('/api/todos/:id(\\d+)', (req, res, next) => {
+    const targetId = Number(req.params.id);
+    const target = todos.find(todo => todo.id === targetId);
+    if (target === undefined) {
+        const err = new Error('todo not found');
+        err.statusCode = 404;
+        return next(err);
+    }
+
+    target.completed = true;
+
+    req.todo = target;
+    next();
+});
+
+app.delete('/api/todos/:id(\\d+)', (req, res, next) => {
+    todos = todos.filter(todo => todo.id !== req.todo.id);
+    res.status(204).end();
+});
+
+app.route('api/todos/:id(\\d+)/completed')
+  .put((req, res) => {
+    req.todo.completed = true;
+    res.json(req.todo);
+  })
+  .delete((req, res) => {
+    req.todo.completed = false;
+    res.json(req.todo);
+  });
+
 app.use((err, req, res, next) => {
     console.log(err);
     res.status(err.statusCode || 500).json({ error: err.message });
